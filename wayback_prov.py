@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Give this script a URL and optionally a --start and --end year and it 
@@ -27,10 +27,13 @@ is a subcollection of focused_crawls.
 import csv
 import sys
 import json
-import urllib
 import datetime
 import optparse
 import collections
+
+from urllib.request import urlopen
+
+colls = {}
 
 def main():
     now = datetime.datetime.now()
@@ -50,14 +53,14 @@ def main():
     crawl_data = get_crawls(url, opts.start, opts.end)
 
     if opts.format == 'text':
-        colls = collections.Counter()
+        coll_counter = collections.Counter()
         for crawl in crawl_data:
-            colls.update(crawl['collections'])
+            coll_counter.update(crawl['collections'])
 
-        max_pos = str(len(str(colls.most_common(1)[0][1])))
+        max_pos = str(len(str(coll_counter.most_common(1)[0][1])))
         str_format = '%' + max_pos + 'i https://archive.org/details/%s'
-        for coll_name, count in colls.most_common():
-            print(str_format % (count, coll_name))
+        for coll_id, count in coll_counter.most_common():
+            print(str_format % (count, coll_id))
 
     elif opts.format == 'json':
         data = list(crawl_data)
@@ -70,13 +73,13 @@ def main():
             crawl['collections'] = ','.join(crawl['collections'])
             w.writerow(crawl)
 
-def get_crawls(url, start_year, end_year):
+def get_crawls(url, start_year, end_year, flatten=False):
     api = 'https://web.archive.org/__wb/calendarcaptures?url=%s&selected_year=%s'
     for year in range(start_year, end_year + 1):
         # This calendar data structure reflects the layout of a calendar
         # month. So some spots in the first and last row are null. Not
         # every day has any data if the URL wasn't crawled then.
-        cal = json.loads(urllib.urlopen(api % (url, year)).read())
+        cal = json.loads(urlopen(api % (url, year)).read())
         for month in cal:
             for week in month:
                 for day in week:
@@ -90,7 +93,39 @@ def get_crawls(url, start_year, end_year):
                             'collections': day['why'][i],
                         }
                         c['url'] = 'https://web.archive.org/web/%s/%s' % (c['timestamp'], url)
+                        if flatten:
+                            c['collections'] = flatten_collections(c['collections'])
                         yield c
+
+def flatten_collections(coll_ids):
+    # make sure we have all the collections first
+    # should be a no-op if we've fetched them before
+    for coll_id in coll_ids:
+        coll = get_collection(coll_id)
+    # now figure out which one is the leaf
+
+def get_collection(coll_id):
+    # no need to fetch twice
+    if coll_id in colls:
+        return colls[coll_id]
+
+    # get the collection metadata
+    url = 'https://archive.org/metadata/%s' % coll_id
+    data = json.loads(urlopen(url).read())
+
+    # if the collection is part of another collection go get them too
+    if 'collection' in data:
+        other_colls = data['collection']
+        if type(other_colls) == str:
+            other_colls = [other_colls]
+        # recursively fetch any parent collections
+        for other_coll_id in other_colls:
+            other_coll = get_collection(other_coll_id)
+            other_coll['child_collection'].append(coll_id)
+
+    data['child_collection'] = []
+    return data
+
 
 if __name__ == "__main__":
     main()
