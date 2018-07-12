@@ -19,9 +19,9 @@ So here's how it works:
      47 https://archive.org/details/epa.gov5
     ...
 
-One thing to remember when interpreting this data is that collections 
-can contain other collections. For example the edgi_monitor collection is a
-subcollection of focused_crawls.
+One thing to remember when interpreting this data is that collections can
+contain other collections. For example the *edgi_monitor* collection is a
+sub-collection of *focused_crawls*.
 
 If you use the `--collapse` option only the most specific collection will be
 reported for a given crawl.  So if *coll1* is part of *coll2* which is part of

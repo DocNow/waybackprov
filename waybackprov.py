@@ -107,7 +107,7 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False):
                             'collections': day['why'][i],
                         }
                         c['url'] = 'https://web.archive.org/web/%s/%s' % (c['timestamp'], url)
-                        if collapse:
+                        if collapse and len(c['collections']) > 0:
                             c['collections'] = [deepest_collection(c['collections'])]
                         yield c
 
