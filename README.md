@@ -1,4 +1,4 @@
-Give waybackprov a URL and optionally a `--start` and `--end` year and it will
+Give *waybackprov* a URL and optionally a `--start` and `--end` year and it will
 use an (undocumented) Internet Archive API call to fetch the provenance data
 behind the calendar view and summarize which Internet Archive collections are
 saving the URL the most.
