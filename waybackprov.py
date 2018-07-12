@@ -8,7 +8,7 @@ are saving the URL the most.
 
 For example:
 
-./wayback-prov.py https://twitter.com/EPAScottPruitt
+% waybackprov https://twitter.com/EPAScottPruitt
 364 https://archive.org/details/focused_crawls
 306 https://archive.org/details/edgi_monitor
 151 https://archive.org/details/www3.epa.gov
@@ -16,12 +16,15 @@ For example:
  47 https://archive.org/details/epa.gov5
 ...
 
-If you would rather see the raw data as JSON or CSV use the --format option.
-
 One thing to remember when interpreting this data is that collections 
 can contain other collections. For example the edgi_monitor collection
-is a subcollection of focused_crawls.
+is a subcollection of focused_crawls. If you use the --collapse option
+only the most specific collection will be reported for a given crawl.
+So if coll1 is part of coll2 which is part of coll3, only coll1 will be reported
+instead of coll1, coll2 and coll3. This does involve collection metadata
+lookups at the Internet Archive API, so it does slow performance significantly.
 
+If you would rather see the raw data as JSON or CSV use the --format option.
 """
 
 import csv
@@ -37,7 +40,7 @@ from urllib.request import urlopen
 colls = {}
 
 def main():
-    logging.basicConfig(filename='wayback_prov.log', level=logging.INFO)
+    logging.basicConfig(filename='waybackprov.log', level=logging.INFO)
     now = datetime.datetime.now()
 
     parser = optparse.OptionParser('waybackprov.py [options] <url>')
@@ -45,7 +48,8 @@ def main():
     parser.add_option('--end', default=now.year, help='end year')
     parser.add_option('--format', choices=['text', 'csv', 'json'], 
                       default='text', help='output data')
-    parser.add_option('--deepest', action='store_true', help='one collection')
+    parser.add_option('--collapse', action='store_true', 
+                      help='only display most specific collection')
     opts, args = parser.parse_args()
 
     if len(args) != 1:
@@ -53,7 +57,7 @@ def main():
 
     url = args[0]
 
-    crawl_data = get_crawls(url, opts.start, opts.end, opts.deepest)
+    crawl_data = get_crawls(url, opts.start, opts.end, opts.collapse)
 
     if opts.format == 'text':
         coll_counter = collections.Counter()
@@ -76,7 +80,7 @@ def main():
             crawl['collections'] = ','.join(crawl['collections'])
             w.writerow(crawl)
 
-def get_crawls(url, start_year=None, end_year=None, deepest=False):
+def get_crawls(url, start_year=None, end_year=None, collapse=False):
     if start_year is None:
         start_year = datetime.datetime.now().year
     if end_year is None:
@@ -102,7 +106,7 @@ def get_crawls(url, start_year=None, end_year=None, deepest=False):
                             'collections': day['why'][i],
                         }
                         c['url'] = 'https://web.archive.org/web/%s/%s' % (c['timestamp'], url)
-                        if deepest:
+                        if collapse:
                             c['collections'] = [deepest_collection(c['collections'])]
                         yield c
 
@@ -132,14 +136,25 @@ def get_collection(coll_id):
 
     return data
 
-def get_depth(coll_id):
+def get_depth(coll_id, seen_colls=None):
     coll = get_collection(coll_id)
     if 'depth' in coll:
         return coll['depth']
+
     logging.info('calculating depth of %s', coll_id)
+
     if len(coll['collection']) == 0:
         return 0
-    depth = max(map(lambda id: get_depth(id) + 1, coll['collection']))
+
+    # prevent recursive loops
+    if seen_colls == None:
+        seen_colls = set()
+    if coll_id in seen_colls:
+        return 0
+    seen_colls.add(coll_id)
+
+    depth = max(map(lambda id: get_depth(id, seen_colls) + 1, coll['collection']))
+
     coll['depth'] = depth
     logging.info('depth %s = %s', coll_id, depth)
     return depth

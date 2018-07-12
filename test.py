@@ -1,9 +1,10 @@
+import os
 import pytest
 import logging
 
 from wayback_prov import *
 
-logging.basicConfig(filename='test.log', level=logging.INFO)
+logging.basicConfig(filename='test.log', filemode='w', level=logging.INFO)
 
 def test_coll():
     coll = get_collection('ArchiveIt-Collection-2410')
