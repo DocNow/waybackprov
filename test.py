@@ -1,5 +1,9 @@
 import pytest
+import logging
+
 from wayback_prov import *
+
+logging.basicConfig(filename='test.log', level=logging.INFO)
 
 def test_coll():
     coll = get_collection('ArchiveIt-Collection-2410')
@@ -27,4 +31,9 @@ def test_deepest_collection():
         'ArchiveIt-Collection-2410'
     ]
     assert deepest_collection(colls) == 'ArchiveIt-Collection-2410'
+
+def test_loop():
+    # weirdly, some collections can contain themselves when there is a loop
+    # e.g. coll1 ∃ coll2 and coll2 ∃ coll1
+    assert get_depth('ArchiveIt-Partner-1140') == 4
 

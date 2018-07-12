@@ -27,6 +27,7 @@ is a subcollection of focused_crawls.
 import csv
 import sys
 import json
+import logging
 import datetime
 import optparse
 import collections
@@ -36,6 +37,7 @@ from urllib.request import urlopen
 colls = {}
 
 def main():
+    logging.basicConfig(filename='wayback_prov.log', level=logging.INFO)
     now = datetime.datetime.now()
 
     parser = optparse.OptionParser('waybackprov.py [options] <url>')
@@ -85,6 +87,7 @@ def get_crawls(url, start_year=None, end_year=None, deepest=False):
         # This calendar data structure reflects the layout of a calendar
         # month. So some spots in the first and last row are null. Not
         # every day has any data if the URL wasn't crawled then.
+        logging.info("getting calendar for %s", year)
         cal = json.loads(urlopen(api % (url, year)).read())
         for month in cal:
             for week in month:
@@ -111,6 +114,8 @@ def get_collection(coll_id):
     if coll_id in colls:
         return colls[coll_id]
 
+    logging.info('fetching collection %s', coll_id)
+
     # get the collection metadata
     url = 'https://archive.org/metadata/%s' % coll_id
     data = json.loads(urlopen(url).read())['metadata']
@@ -131,10 +136,12 @@ def get_depth(coll_id):
     coll = get_collection(coll_id)
     if 'depth' in coll:
         return coll['depth']
+    logging.info('calculating depth of %s', coll_id)
     if len(coll['collection']) == 0:
         return 0
     depth = max(map(lambda id: get_depth(id) + 1, coll['collection']))
     coll['depth'] = depth
+    logging.info('depth %s = %s', coll_id, depth)
     return depth
 
 if __name__ == "__main__":
