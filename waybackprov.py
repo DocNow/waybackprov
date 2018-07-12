@@ -30,6 +30,7 @@ If you would rather see the raw data as JSON or CSV use the --format option.
 import csv
 import sys
 import json
+import time
 import logging
 import datetime
 import optparse
@@ -92,7 +93,7 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False):
         # month. So some spots in the first and last row are null. Not
         # every day has any data if the URL wasn't crawled then.
         logging.info("getting calendar for %s", year)
-        cal = json.loads(urlopen(api % (url, year)).read())
+        cal = get_json(api % (url, year))
         for month in cal:
             for week in month:
                 for day in week:
@@ -122,7 +123,7 @@ def get_collection(coll_id):
 
     # get the collection metadata
     url = 'https://archive.org/metadata/%s' % coll_id
-    data = json.loads(urlopen(url).read())['metadata']
+    data = get_json(url)['metadata']
 
     # make collection into reliable array
     if 'collection' in data:
@@ -158,6 +159,21 @@ def get_depth(coll_id, seen_colls=None):
     coll['depth'] = depth
     logging.info('depth %s = %s', coll_id, depth)
     return depth
+
+def get_json(url):
+    count = 0
+    while True:
+        count += 1
+        if count >= 10:
+            logging.error("giving up on fetching JSON from %s", url)
+        try:
+            resp = urlopen(url)
+            return json.loads(resp.read())
+        except Exception as e:
+            logging.error('caught exception: %s', e)
+        logging.info('sleeping for %s seconds', count * 10)
+        time.sleep(count * 10)
+    raise(Exception("unable to get JSON for %s", url))
 
 if __name__ == "__main__":
     main()

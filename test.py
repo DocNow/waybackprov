@@ -2,7 +2,7 @@ import os
 import pytest
 import logging
 
-from wayback_prov import *
+from waybackprov import *
 
 logging.basicConfig(filename='test.log', filemode='w', level=logging.INFO)
 
