@@ -36,7 +36,7 @@ rather than a summary.
 If you use `--verbose` a log of what waybackprov is doing will be written to
 *waybackprov.log*.
 
-### Test
+## Test
 
 If you would like to test it first install [pytest] and then:
 
