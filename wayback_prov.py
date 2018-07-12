@@ -43,6 +43,7 @@ def main():
     parser.add_option('--end', default=now.year, help='end year')
     parser.add_option('--format', choices=['text', 'csv', 'json'], 
                       default='text', help='output data')
+    parser.add_option('--deepest', action='store_true', help='one collection')
     opts, args = parser.parse_args()
 
     if len(args) != 1:
@@ -50,7 +51,7 @@ def main():
 
     url = args[0]
 
-    crawl_data = get_crawls(url, opts.start, opts.end)
+    crawl_data = get_crawls(url, opts.start, opts.end, opts.deepest)
 
     if opts.format == 'text':
         coll_counter = collections.Counter()
@@ -73,7 +74,7 @@ def main():
             crawl['collections'] = ','.join(crawl['collections'])
             w.writerow(crawl)
 
-def get_crawls(url, start_year=None, end_year=None, flatten=False):
+def get_crawls(url, start_year=None, end_year=None, deepest=False):
     if start_year is None:
         start_year = datetime.datetime.now().year
     if end_year is None:
@@ -98,16 +99,12 @@ def get_crawls(url, start_year=None, end_year=None, flatten=False):
                             'collections': day['why'][i],
                         }
                         c['url'] = 'https://web.archive.org/web/%s/%s' % (c['timestamp'], url)
-                        if flatten:
-                            c['collections'] = flatten_collections(c['collections'])
+                        if deepest:
+                            c['collections'] = [deepest_collection(c['collections'])]
                         yield c
 
-def flatten_collections(coll_ids):
-    # make sure we have all the collections first
-    # should be a no-op if we've fetched them before
-    for coll_id in coll_ids:
-        coll = get_collection(coll_id)
-    # now figure out which one is the leaf
+def deepest_collection(coll_ids):
+    return max(coll_ids, key=get_depth)
 
 def get_collection(coll_id):
     # no need to fetch twice
@@ -116,21 +113,29 @@ def get_collection(coll_id):
 
     # get the collection metadata
     url = 'https://archive.org/metadata/%s' % coll_id
-    data = json.loads(urlopen(url).read())
+    data = json.loads(urlopen(url).read())['metadata']
 
-    # if the collection is part of another collection go get them too
+    # make collection into reliable array
     if 'collection' in data:
-        other_colls = data['collection']
-        if type(other_colls) == str:
-            other_colls = [other_colls]
-        # recursively fetch any parent collections
-        for other_coll_id in other_colls:
-            other_coll = get_collection(other_coll_id)
-            other_coll['child_collection'].append(coll_id)
+        if type(data['collection']) == str:
+            data['collection'] = [data['collection']]
+    else:
+        data['collection'] = []
 
-    data['child_collection'] = []
+    # so we don't have to look it up again
+    colls[coll_id] = data
+
     return data
 
+def get_depth(coll_id):
+    coll = get_collection(coll_id)
+    if 'depth' in coll:
+        return coll['depth']
+    if len(coll['collection']) == 0:
+        return 0
+    depth = max(map(lambda id: get_depth(id) + 1, coll['collection']))
+    coll['depth'] = depth
+    return depth
 
 if __name__ == "__main__":
     main()
