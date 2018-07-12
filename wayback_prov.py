@@ -73,7 +73,12 @@ def main():
             crawl['collections'] = ','.join(crawl['collections'])
             w.writerow(crawl)
 
-def get_crawls(url, start_year, end_year, flatten=False):
+def get_crawls(url, start_year=None, end_year=None, flatten=False):
+    if start_year is None:
+        start_year = datetime.datetime.now().year
+    if end_year is None:
+        end_year = datetime.datetime.now().year
+
     api = 'https://web.archive.org/__wb/calendarcaptures?url=%s&selected_year=%s'
     for year in range(start_year, end_year + 1):
         # This calendar data structure reflects the layout of a calendar
