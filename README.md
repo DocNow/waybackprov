@@ -3,7 +3,13 @@ use an (undocumented) Internet Archive API call to fetch the provenance data
 behind the calendar view and summarize which Internet Archive collections are
 saving the URL the most.
 
-For example:
+## Install 
+
+    pip install waybackprov
+
+## Use
+
+So here's how it works:
 
     % waybackprov https://twitter.com/EPAScottPruitt
     364 https://archive.org/details/focused_crawls
@@ -30,3 +36,10 @@ rather than a summary.
 If you use `--verbose` a log of what waybackprov is doing will be written to
 *waybackprov.log*.
 
+### Test
+
+If you would like to test it first install [pytest] and then:
+
+    pytest test.py
+
+[pytest]: https://docs.pytest.org/en/latest/
