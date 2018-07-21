@@ -1,47 +1,27 @@
 #!/usr/bin/env python3
 
-"""
-Give this script a URL and optionally a --start and --end year and it 
-will use an (undocumented) Internet Archive API call to fetch the data
-behind the calendar view and summarize which Internet Archive collections
-are saving the URL the most.
-
-For example:
-
-% waybackprov https://twitter.com/EPAScottPruitt
-364 https://archive.org/details/focused_crawls
-306 https://archive.org/details/edgi_monitor
-151 https://archive.org/details/www3.epa.gov
- 60 https://archive.org/details/epa.gov4
- 47 https://archive.org/details/epa.gov5
-...
-
-One thing to remember when interpreting this data is that collections 
-can contain other collections. For example the edgi_monitor collection
-is a subcollection of focused_crawls. If you use the --collapse option
-only the most specific collection will be reported for a given crawl.
-So if coll1 is part of coll2 which is part of coll3, only coll1 will be reported
-instead of coll1, coll2 and coll3. This does involve collection metadata
-lookups at the Internet Archive API, so it does slow performance significantly.
-
-If you would rather see the raw data as JSON or CSV use the --format option.
-"""
-
+import re
 import csv
 import sys
 import json
 import time
+import codecs
 import logging
 import datetime
 import optparse
 import collections
 
+from urllib.parse import quote
 from urllib.request import urlopen
 
 colls = {}
 
 def main():
-    logging.basicConfig(filename='waybackprov.log', level=logging.INFO)
+    logging.basicConfig(
+        filename='waybackprov.log',
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        level=logging.INFO
+    )
     now = datetime.datetime.now()
 
     parser = optparse.OptionParser('waybackprov.py [options] <url>')
@@ -51,6 +31,9 @@ def main():
                       default='text', help='output data')
     parser.add_option('--collapse', action='store_true', 
                       help='only display most specific collection')
+    parser.add_option('--prefix', action='store_true',
+                      help='use url as a prefix')
+    parser.add_option('--regex', help='limit to urls that match pattern')
     opts, args = parser.parse_args()
 
     if len(args) != 1:
@@ -58,7 +41,13 @@ def main():
 
     url = args[0]
 
-    crawl_data = get_crawls(url, opts.start, opts.end, opts.collapse)
+    crawl_data = get_crawls(url, 
+        start_year=opts.start,
+        end_year=opts.end, 
+        collapse=opts.collapse, 
+        prefix=opts.prefix,
+        regex=opts.regex
+    )
 
     if opts.format == 'text':
         coll_counter = collections.Counter()
@@ -81,7 +70,13 @@ def main():
             crawl['collections'] = ','.join(crawl['collections'])
             w.writerow(crawl)
 
-def get_crawls(url, start_year=None, end_year=None, collapse=False):
+def get_crawls(url, start_year=None, end_year=None, collapse=False, 
+               prefix=False, regex=None):
+
+    if prefix == True:
+        for year, sub_url in cdx(url, regex=regex):
+            yield from get_crawls(sub_url, start_year=year, end_year=year)
+        
     if start_year is None:
         start_year = datetime.datetime.now().year
     if end_year is None:
@@ -92,8 +87,9 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False):
         # This calendar data structure reflects the layout of a calendar
         # month. So some spots in the first and last row are null. Not
         # every day has any data if the URL wasn't crawled then.
-        logging.info("getting calendar for %s", year)
+        logging.info("getting calendar year %s for %s", year, url)
         cal = get_json(api % (url, year))
+        found = False
         for month in cal:
             for week in month:
                 for day in week:
@@ -109,7 +105,11 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False):
                         c['url'] = 'https://web.archive.org/web/%s/%s' % (c['timestamp'], url)
                         if collapse and len(c['collections']) > 0:
                             c['collections'] = [deepest_collection(c['collections'])]
+                        logging.info('found crawl %s', c)
+                        found = True
                         yield c
+        if not found:
+            logging.warn('%s is not archived', url)
 
 def deepest_collection(coll_ids):
     return max(coll_ids, key=get_depth)
@@ -174,6 +174,31 @@ def get_json(url):
         logging.info('sleeping for %s seconds', count * 10)
         time.sleep(count * 10)
     raise(Exception("unable to get JSON for %s", url))
+
+def cdx(url, regex=None):
+    logging.info('searching cdx for %s with regex %s', url, regex)
+    try:
+        pattern = re.compile(regex)
+    except Exception as e:
+        sys.exit('invalid regular expression: {}'.format(e))
+
+    cdx_url = 'http://web.archive.org/cdx/search/cdx?url={}&matchType=prefix'.format(quote(url))
+    seen = set()
+    results = codecs.decode(urlopen(cdx_url).read(), encoding='utf8')
+
+    for line in results.split('\n'):
+        parts = line.split(' ')
+        if len(parts) == 7:
+            year = int(parts[1][0:4])
+            url = parts[2]
+            seen_key = '{}:{}'.format(year, url)
+            if seen_key in seen:
+                continue
+            if pattern and not pattern.search(url):
+                continue 
+            seen.add(seen_key)
+            logging.info('cdx found %s', url)
+            yield(year, url)
 
 if __name__ == "__main__":
     main()
