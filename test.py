@@ -6,11 +6,11 @@ from waybackprov import *
 
 logging.basicConfig(filename='test.log', filemode='w', level=logging.INFO)
 
-def est_coll():
+def test_coll():
     coll = get_collection('ArchiveIt-Collection-2410')
     assert coll['title'] == 'University of Maryland'
 
-def est_get_crawls():
+def test_get_crawls():
     crawls = list(get_crawls('https://mith.umd.edu'))
     assert len(crawls) > 0
     assert crawls[0]['timestamp']
@@ -19,11 +19,11 @@ def est_get_crawls():
     assert crawls[0]['collections']
     assert len(crawls[0]['collections']) > 0
 
-def est_depth():
+def test_depth():
     assert get_depth('ArchiveIt-Collection-2410') == 4
     assert get_depth('wikipediaoutlinks00003') == 3
 
-def est_deepest_collection():
+def test_deepest_collection():
     colls = [
         'ArchiveIt-Partner-408',
         'archiveitdigitalcollection',
@@ -33,7 +33,7 @@ def est_deepest_collection():
     ]
     assert deepest_collection(colls) == 'ArchiveIt-Collection-2410'
 
-def est_loop():
+def test_loop():
     # weirdly, some collections can contain themselves when there is a loop
     # e.g. coll1 ∃ coll2 and coll2 ∃ coll1
     assert get_depth('ArchiveIt-Partner-1140') == 4
@@ -45,6 +45,6 @@ def test_prefix():
     assert True
 
 def test_cdx():
-    urls = cdx('https://twitter.com/Guccifer_2', regex='/status/\d+$')
+    urls = cdx('https://twitter.com/Guccifer_2', match='/status/\d+$')
     assert len(list(urls)) == 77
 
