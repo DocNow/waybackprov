@@ -7,10 +7,12 @@ import json
 import time
 import codecs
 import logging
+import operator
 import datetime
 import optparse
 import collections
 
+from functools import reduce
 from urllib.parse import quote
 from urllib.request import urlopen
 
@@ -50,14 +52,35 @@ def main():
     )
 
     if opts.format == 'text':
+        crawls = 0
+        coll_urls = {}
         coll_counter = collections.Counter()
         for crawl in crawl_data:
+            crawls += 1
             coll_counter.update(crawl['collections'])
+            for coll in crawl['collections']:
+                # keep track of urls in each collection
+                if coll not in coll_urls:
+                    coll_urls[coll] = set()
+                coll_urls[coll].add(crawl['url'])
 
         max_pos = str(len(str(coll_counter.most_common(1)[0][1])))
-        str_format = '%' + max_pos + 'i https://archive.org/details/%s'
+        if opts.prefix:
+            str_format = '%' + max_pos + 'i %' + max_pos + 'i https://archive.org/details/%s'
+        else:
+            str_format = '%' + max_pos + 'i https://archive.org/details/%s'
+
         for coll_id, count in coll_counter.most_common():
-            print(str_format % (count, coll_id))
+            if opts.prefix:
+                print(str_format % (count, len(coll_urls[coll_id]), coll_id))
+            else:
+                print(str_format % (count, coll_id))
+
+        print('')
+        print('total crawls: %s' % crawls)
+        if (opts.prefix):
+            total_urls = len(reduce(operator.or_, coll_urls.values()))
+            print('total urls: %s' % total_urls)
 
     elif opts.format == 'json':
         data = list(crawl_data)
@@ -65,7 +88,7 @@ def main():
 
     elif opts.format == 'csv':
         w = csv.DictWriter(sys.stdout, 
-            fieldnames=['timestamp', 'status', 'collections', 'url'])
+            fieldnames=['timestamp', 'status', 'collections', 'url', 'wayback_url'])
         for crawl in crawl_data:
             crawl['collections'] = ','.join(crawl['collections'])
             w.writerow(crawl)
@@ -74,13 +97,18 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False,
                prefix=False, match=None):
 
     if prefix == True:
-        for year, sub_url in cdx(url, match=match):
+        for year, sub_url in cdx(url, match=match, start_year=start_year,
+                                 end_year=end_year):
             yield from get_crawls(sub_url, start_year=year, end_year=year)
         
     if start_year is None:
         start_year = datetime.datetime.now().year
+    else:
+        start_year = int(start_year)
     if end_year is None:
         end_year = datetime.datetime.now().year
+    else:
+        end_year = int(end_year)
 
     api = 'https://web.archive.org/__wb/calendarcaptures?url=%s&selected_year=%s'
     for year in range(start_year, end_year + 1):
@@ -101,8 +129,9 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False,
                             'status': day['st'][i],
                             'timestamp': day['ts'][i],
                             'collections': day['why'][i],
+                            'url': url
                         }
-                        c['url'] = 'https://web.archive.org/web/%s/%s' % (c['timestamp'], url)
+                        c['wayback_url'] = 'https://web.archive.org/web/%s/%s' % (c['timestamp'], url)
                         if collapse and len(c['collections']) > 0:
                             c['collections'] = [deepest_collection(c['collections'])]
                         logging.info('found crawl %s', c)
@@ -175,14 +204,18 @@ def get_json(url):
         time.sleep(count * 10)
     raise(Exception("unable to get JSON for %s", url))
 
-def cdx(url, match=None):
+def cdx(url, match=None, start_year=None, end_year=None):
     logging.info('searching cdx for %s with regex %s', url, match)
-    try:
-        pattern = re.compile(match)
-    except Exception as e:
-        sys.exit('invalid regular expression: {}'.format(e))
 
-    cdx_url = 'http://web.archive.org/cdx/search/cdx?url={}&matchType=prefix'.format(quote(url))
+    if match:
+        try:
+            pattern = re.compile(match)
+        except Exception as e:
+            sys.exit('invalid regular expression: {}'.format(e))
+    else:
+        pattern = None
+
+    cdx_url = 'http://web.archive.org/cdx/search/cdx?url={}&matchType=prefix&from={}&to={}'.format(quote(url), start_year, end_year)
     seen = set()
     results = codecs.decode(urlopen(cdx_url).read(), encoding='utf8')
 

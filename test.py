@@ -41,8 +41,7 @@ def test_loop():
 def test_prefix():
     crawls = get_crawls('https://twitter.com/Guccifer_2', prefix=True, regex='/status/\d+$')
     crawl = next(crawls)
-    print(crawl)
-    assert True
+    assert crawl['url']
 
 def test_cdx():
     urls = cdx('https://twitter.com/Guccifer_2', match='/status/\d+$')
