@@ -33,7 +33,7 @@ def main():
                       help='only display most specific collection')
     parser.add_option('--prefix', action='store_true',
                       help='use url as a prefix')
-    parser.add_option('--regex', help='limit to urls that match pattern')
+    parser.add_option('--match', help='limit to urls that match pattern')
     opts, args = parser.parse_args()
 
     if len(args) != 1:
@@ -46,7 +46,7 @@ def main():
         end_year=opts.end, 
         collapse=opts.collapse, 
         prefix=opts.prefix,
-        regex=opts.regex
+        match=opts.match
     )
 
     if opts.format == 'text':
@@ -71,10 +71,10 @@ def main():
             w.writerow(crawl)
 
 def get_crawls(url, start_year=None, end_year=None, collapse=False, 
-               prefix=False, regex=None):
+               prefix=False, match=None):
 
     if prefix == True:
-        for year, sub_url in cdx(url, regex=regex):
+        for year, sub_url in cdx(url, match=match):
             yield from get_crawls(sub_url, start_year=year, end_year=year)
         
     if start_year is None:
@@ -175,10 +175,10 @@ def get_json(url):
         time.sleep(count * 10)
     raise(Exception("unable to get JSON for %s", url))
 
-def cdx(url, regex=None):
-    logging.info('searching cdx for %s with regex %s', url, regex)
+def cdx(url, match=None):
+    logging.info('searching cdx for %s with regex %s', url, match)
     try:
-        pattern = re.compile(regex)
+        pattern = re.compile(match)
     except Exception as e:
         sys.exit('invalid regular expression: {}'.format(e))
 
