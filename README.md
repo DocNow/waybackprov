@@ -1,7 +1,7 @@
-Give *waybackprov* a URL and optionally a `--start` and `--end` year and it will
-use an (undocumented) Internet Archive API call to fetch the provenance data
-behind the calendar view and summarize which Internet Archive collections are
-saving the URL the most.
+Give *waybackprov* a URL and it will summarize which Internet Archive
+collections have archived the URL. This kind of information can sometimes
+provide insight about why a particular web resource or set of web resources were
+archived from the web.
 
 ## Install 
 
