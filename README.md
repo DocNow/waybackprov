@@ -7,9 +7,9 @@ saving the URL the most.
 
     pip install waybackprov
 
-## Single Page
+## Basic Usage
 
-So here's how it works:
+So to check a particular URL here's how it works:
 
     % waybackprov https://twitter.com/EPAScottPruitt
     364 https://archive.org/details/focused_crawls
@@ -19,6 +19,13 @@ So here's how it works:
      47 https://archive.org/details/epa.gov5
     ...
 
+## Time
+
+By default waybackprov will only look at the current year. If you would like it
+to examine a range of years use the `--start` and `--end` options:
+
+    % waybackprov --start 2016 --end 2018 https://twitter.com/EPAScottPruitt
+
 ## Multiple Pages
 
 If you would like to look at all URLs at a particular URL prefix you can use the
@@ -26,9 +33,7 @@ If you would like to look at all URLs at a particular URL prefix you can use the
 
     % waybackprov --prefix https://twitter.com/EPAScottPruitt
 
-This will use the Internet Archive's [CDX
-API](https://github.com/webrecorder/pywb/wiki/CDX-Server-API) to also include
-URLs that are extensions of the URL you supply, so it would include for example:
+This will use the Internet Archive's [CDX API](https://github.com/webrecorder/pywb/wiki/CDX-Server-API) to also include URLs that are extensions of the URL you supply, so it would include for example:
 
     https://twitter.com/EPAScottPruitt/status/1309839080398339
 
@@ -37,7 +42,10 @@ But it can also include things you may not want, such as:
     https://twitter.com/EPAScottPruitt/status/1309839080398339/media/1
 
 To further limit the URLs use the `--match` parameter to specify a regular
-expression:
+expression only check particular URLs. Further specifying the URLs you are
+interested in is highly recommended since it prevents lots of lookups for CSS,
+JavaScript and image files that are components of the resource that was
+initially crawled.
 
     % waybackprov --prefix --match 'status/\d+$' https://twitter.com/EPAScottPruitt
 
