@@ -7,7 +7,7 @@ saving the URL the most.
 
     pip install waybackprov
 
-## Use
+## Single Page
 
 So here's how it works:
 
@@ -19,7 +19,7 @@ So here's how it works:
      47 https://archive.org/details/epa.gov5
     ...
 
-### Multiple Pages
+## Multiple Pages
 
 If you would like to look at all URLs at a particular URL prefix you can use the
 `--prefix` option:
@@ -41,7 +41,7 @@ expression:
 
     % waybackprov --prefix --match 'status/\d+$' https://twitter.com/EPAScottPruitt
 
-### Collections
+## Collections
 
 One thing to remember when interpreting this data is that collections can
 contain other collections. For example the *edgi_monitor* collection is a
@@ -53,13 +53,13 @@ reported for a given crawl.  So if *coll1* is part of *coll2* which is part of
 This does involve collection metadata lookups at the Internet Archive API, so it
 does slow performance significantly.
 
-### JSON and CSV
+## JSON and CSV
 
 If you would rather see the raw data as JSON or CSV use the `--format` option.
 When you use either of these formats you will see the metadata for each crawl,
 rather than a summary.
 
-### Log
+## Log
 
 You should see a waybackprov.log that contains information about what is going
 on behind the scenes.
