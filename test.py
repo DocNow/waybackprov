@@ -39,11 +39,11 @@ def test_loop():
     assert get_depth('ArchiveIt-Partner-1140') == 4
 
 def test_prefix():
-    crawls = get_crawls('https://twitter.com/Guccifer_2', prefix=True, regex='/status/\d+$')
+    crawls = get_crawls('https://twitter.com/Guccifer_2', prefix=True, match='/status/\d+$')
     crawl = next(crawls)
     assert crawl['url']
 
 def test_cdx():
-    urls = cdx('https://twitter.com/Guccifer_2', match='/status/\d+$')
-    assert len(list(urls)) == 77
+    urls = cdx('https://twitter.com/Guccifer_2', match='/status/\d+$', start_year=2016, end_year=2018)
+    assert len(list(urls)) == 130
 

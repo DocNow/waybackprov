@@ -19,6 +19,30 @@ So here's how it works:
      47 https://archive.org/details/epa.gov5
     ...
 
+### Multiple Pages
+
+If you would like to look at all URLs at a particular URL prefix you can use the
+--prefix option:
+
+    % waybackprov --prefix https://twitter.com/EPAScottPruitt
+
+This will use the Internet Archive's [CDX
+API](https://github.com/webrecorder/pywb/wiki/CDX-Server-API) to also include
+URLs that are extensions of the URL you supply, so it would include for example:
+
+    https://twitter.com/EPAScottPruitt/status/1309839080398339
+
+But it can also include things you may not want, such as:
+
+    https://twitter.com/EPAScottPruitt/status/1309839080398339/media/1
+
+To further limit the URLs use the `--match` parameter to specify a regular
+expression:
+
+    % waybackprov --prefix --match 'status/\d+$' https://twitter.com/EPAScottPruitt
+
+### Collections
+
 One thing to remember when interpreting this data is that collections can
 contain other collections. For example the *edgi_monitor* collection is a
 sub-collection of *focused_crawls*.
@@ -29,12 +53,16 @@ reported for a given crawl.  So if *coll1* is part of *coll2* which is part of
 This does involve collection metadata lookups at the Internet Archive API, so it
 does slow performance significantly.
 
+### JSON and CSV
+
 If you would rather see the raw data as JSON or CSV use the `--format` option.
 When you use either of these formats you will see the metadata for each crawl,
 rather than a summary.
 
-If you use `--verbose` a log of what waybackprov is doing will be written to
-*waybackprov.log*.
+### Log
+
+You should see a waybackprov.log that contains information about what is going
+on behind the scenes.
 
 ## Test
 
