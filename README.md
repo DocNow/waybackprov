@@ -22,7 +22,7 @@ So here's how it works:
 ### Multiple Pages
 
 If you would like to look at all URLs at a particular URL prefix you can use the
---prefix option:
+`--prefix` option:
 
     % waybackprov --prefix https://twitter.com/EPAScottPruitt
 
