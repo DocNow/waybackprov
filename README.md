@@ -9,7 +9,7 @@ archived from the web.
 
 ## Basic Usage
 
-So to check a particular URL here's how it works:
+To check a particular URL here's how it works:
 
     % waybackprov https://twitter.com/EPAScottPruitt
     364 https://archive.org/details/focused_crawls
@@ -18,6 +18,10 @@ So to check a particular URL here's how it works:
      60 https://archive.org/details/epa.gov4
      47 https://archive.org/details/epa.gov5
     ...
+
+The first column contains the number of crawls for a particular URL, and the
+second column contains the URL for the Internet Archive collection that added
+it.
 
 ## Time
 
