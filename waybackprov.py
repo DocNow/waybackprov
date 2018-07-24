@@ -19,11 +19,6 @@ from urllib.request import urlopen
 colls = {}
 
 def main():
-    logging.basicConfig(
-        filename='waybackprov.log',
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        level=logging.INFO
-    )
     now = datetime.datetime.now()
 
     parser = optparse.OptionParser('waybackprov.py [options] <url>')
@@ -36,8 +31,20 @@ def main():
     parser.add_option('--prefix', action='store_true',
                       help='use url as a prefix')
     parser.add_option('--match', help='limit to urls that match pattern')
+    parser.add_option('--log', help='where to log activity to')
     opts, args = parser.parse_args()
 
+    if opts.log:
+        logging.basicConfig(
+            filename=opts.log,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            level=logging.INFO
+        )
+    else:
+        logging.basicConfig(
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            level=logging.WARN
+        )
     if len(args) != 1:
         parser.error('You must supply a URL to lookup')
 
@@ -63,6 +70,9 @@ def main():
                 if coll not in coll_urls:
                     coll_urls[coll] = set()
                 coll_urls[coll].add(crawl['url'])
+
+        if len(coll_counter) == 0:
+            return 
 
         max_pos = str(len(str(coll_counter.most_common(1)[0][1])))
         if opts.prefix:

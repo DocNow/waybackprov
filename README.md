@@ -73,8 +73,10 @@ rather than a summary.
 
 ## Log
 
-You should see a waybackprov.log that contains information about what is going
-on behind the scenes.
+If you would like to see detailed information about what *waybackprov* is doing
+use the `--log` option to supply the a file path to log to:
+
+    % waybackprov --log waybackprov.log https://example.com/
 
 ## Test
 
