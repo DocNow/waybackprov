@@ -207,7 +207,8 @@ def get_json(url):
             logging.error("giving up on fetching JSON from %s", url)
         try:
             resp = urlopen(url)
-            return json.loads(resp.read())
+            reader = codecs.getreader('utf-8')
+            return json.load(reader(resp))
         except Exception as e:
             logging.error('caught exception: %s', e)
         logging.info('sleeping for %s seconds', count * 10)
