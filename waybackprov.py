@@ -22,7 +22,7 @@ def main():
     now = datetime.datetime.now()
 
     parser = optparse.OptionParser('waybackprov.py [options] <url>')
-    parser.add_option('--start', default=now.year, help='start year')
+    parser.add_option('--start', default=now.year -1, help='start year')
     parser.add_option('--end', default=now.year, help='end year')
     parser.add_option('--format', choices=['text', 'csv', 'json'], 
                       default='text', help='output data')
@@ -43,7 +43,7 @@ def main():
     else:
         logging.basicConfig(
             format='%(asctime)s - %(levelname)s - %(message)s',
-            level=logging.WARN
+            level=logging.WARNING
         )
     if len(args) != 1:
         parser.error('You must supply a URL to lookup')
@@ -72,7 +72,8 @@ def main():
                 coll_urls[coll].add(crawl['url'])
 
         if len(coll_counter) == 0:
-            return 
+            print('No results for %s-%s, consider using --start and --end to broaden.' % (opts.start, opts.end))
+            return
 
         max_pos = str(len(str(coll_counter.most_common(1)[0][1])))
         if opts.prefix:
@@ -87,7 +88,7 @@ def main():
                 print(str_format % (count, coll_id))
 
         print('')
-        print('total crawls: %s' % crawls)
+        print('total crawls %s-%s: %s' % (opts.start, opts.end, crawls))
         if (opts.prefix):
             total_urls = len(reduce(operator.or_, coll_urls.values()))
             print('total urls: %s' % total_urls)
@@ -112,7 +113,7 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False,
             yield from get_crawls(sub_url, start_year=year, end_year=year)
         
     if start_year is None:
-        start_year = datetime.datetime.now().year
+        start_year = datetime.datetime.now().year - 1
     else:
         start_year = int(start_year)
     if end_year is None:
@@ -147,8 +148,6 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False,
                         logging.info('found crawl %s', c)
                         found = True
                         yield c
-        if not found:
-            logging.warn('%s is not archived', url)
 
 def deepest_collection(coll_ids):
     return max(coll_ids, key=get_depth)

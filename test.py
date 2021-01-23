@@ -45,7 +45,7 @@ def test_prefix():
 
 def test_cdx():
     urls = cdx('https://twitter.com/Guccifer_2', match='/status/\d+$', start_year=2016, end_year=2018)
-    assert len(list(urls)) == 130
+    assert len(list(urls)) == 132
 
 def test_missing():
     crawls = list(get_crawls('https://twitter.com/slavresistance/status/1016697918970105857/'))
