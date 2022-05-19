@@ -6,7 +6,7 @@ with open("README.md") as f:
 if __name__ == "__main__":
     setup(
         name='waybackprov',
-        version='0.0.8',
+        version='0.0.9',
         url='https://github.com/edsu/waybackprov',
         author='Ed Summers',
         author_email='ehs@pobox.com',

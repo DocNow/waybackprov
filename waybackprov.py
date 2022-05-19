@@ -143,6 +143,8 @@ def get_crawls(url, start_year=None, end_year=None, collapse=False,
                             'url': url
                         }
                         c['wayback_url'] = 'https://web.archive.org/web/%s/%s' % (c['timestamp'], url)
+                        if c['collections'] is None:
+                            continue
                         if collapse and len(c['collections']) > 0:
                             c['collections'] = [deepest_collection(c['collections'])]
                         logging.info('found crawl %s', c)
