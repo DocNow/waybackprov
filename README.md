@@ -1,5 +1,7 @@
 # waybackprov
 
+[![Test](https://github.com/DocNow/waybackprov/actions/workflows/test.yml/badge.svg)](https://github.com/DocNow/waybackprov/actions/workflows/test.yml)
+
 Give *waybackprov* a URL and it will summarize which Internet Archive
 collections have archived the URL. This kind of information can sometimes
 provide insight about why a particular web resource or set of web resources were
