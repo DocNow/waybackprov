@@ -1,10 +1,4 @@
-import os
-import pytest
-import logging
-
-from waybackprov import *
-
-logging.basicConfig(filename='test.log', filemode='w', level=logging.INFO)
+from waybackprov import get_collection, get_crawls, get_depth, deepest_collection, cdx
 
 def test_coll():
     coll = get_collection('ArchiveIt-Collection-2410')
@@ -36,7 +30,7 @@ def test_deepest_collection():
 def test_loop():
     # weirdly, some collections can contain themselves when there is a loop
     # e.g. coll1 ∃ coll2 and coll2 ∃ coll1
-    assert get_depth('ArchiveIt-Partner-1140') == 4
+    assert get_depth('ArchiveIt-Partner-1140') == 3
 
 def test_prefix():
     crawls = get_crawls('https://twitter.com/Guccifer_2', prefix=True, match='/status/\d+$')

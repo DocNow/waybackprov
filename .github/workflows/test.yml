@@ -1,0 +1,35 @@
+name: Test
+on:
+  - push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.13]
+    steps:
+
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Lint
+        uses: astral-sh/ruff-action@v2
+        with:
+          args: 'check'
+
+      - name: Format
+        uses: astral-sh/ruff-action@v2
+        with:
+          args: 'format --check'
+
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Run tests
+        run: uv run pytest

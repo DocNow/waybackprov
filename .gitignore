@@ -3,3 +3,5 @@ __pycache__
 *.log
 dist
 waybackprov.egg-info
+uv.lock
+.python-version

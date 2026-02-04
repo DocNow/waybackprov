@@ -1,0 +1,27 @@
+[project]
+name = "waybackprov"
+version = "0.0.9"
+description = "Checks the provenance of a URL in the Wayback machine"
+readme = "README.md"
+authors = [
+    { name = "Ed Summers", email = "ehs@pobox.com" }
+]
+requires-python = ">=3.0"
+dependencies = []
+
+[project.scripts]
+waybackprov = "waybackprov:main"
+
+[build-system]
+requires = ["uv_build>=0.9.8,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=4.6.11",
+]
+
+[tool.pytest.ini_options]
+addopts = "-v -s"
+log_file = "test.log"
+log_file_level = "DEBUG"
