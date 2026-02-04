@@ -138,7 +138,6 @@ def get_crawls(
         # month. So some spots in the first and last row are null. Not
         # every day has any data if the URL wasn't crawled then.
         logging.info("getting calendar year %s for %s", year, url)
-        print("getting calendar year %s for %s", year, url)
         cal = get_json(api % (url, year))
         for month in cal:
             for week in month:
