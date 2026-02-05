@@ -1,6 +1,6 @@
 [project]
 name = "waybackprov"
-version = "0.1.0"
+version = "0.1.1"
 description = "Checks the provenance of a URL in the Wayback machine"
 readme = "README.md"
 authors = [

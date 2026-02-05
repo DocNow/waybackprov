@@ -27,17 +27,20 @@ To check a particular URL here's how it works:
 
 ```shell
 waybackprov https://twitter.com/EPAScottPruitt
-364 https://archive.org/details/focused_crawls
-306 https://archive.org/details/edgi_monitor
-151 https://archive.org/details/www3.epa.gov
- 60 https://archive.org/details/epa.gov4
- 47 https://archive.org/details/epa.gov5
-  ...
+
+crawls collections
+   364 https://archive.org/details/focused_crawls
+   306 https://archive.org/details/edgi_monitor
+   151 https://archive.org/details/www3.epa.gov
+    60 https://archive.org/details/epa.gov4
+    47 https://archive.org/details/epa.gov5
 ```
 
 The first column contains the number of crawls for a particular URL, and the
 second column contains the URL for the Internet Archive collection that added
 it.
+
+When evaluating the counts it's important to remember that collections can be contained in other collections. So `epa.gov4` in the example above is part of the `edgi_monitor` collection.
 
 ## Time
 

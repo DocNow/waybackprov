@@ -7,12 +7,10 @@ import json
 import time
 import codecs
 import logging
-import operator
 import datetime
 import optparse
 import collections
 
-from functools import reduce
 from urllib.parse import quote
 from urllib.request import urlopen
 
@@ -61,12 +59,19 @@ def main():
     )
 
     if opts.format == "text":
-        crawls = 0
+        # coll_urls is a dictionary where the key is a collection id and the
+        # value is a set of URLs that have been crawled
         coll_urls = {}
+
+        # coll_counter is a Counter that counts the number of crawls that are
+        # in a collection
         coll_counter = collections.Counter()
+
         for crawl in crawl_data:
-            crawls += 1
             coll_counter.update(crawl["collections"])
+
+            # a crawl can appear in multiple collections because of how
+            # collections can contain other collections
             for coll in crawl["collections"]:
                 # keep track of urls in each collection
                 if coll not in coll_urls:
@@ -80,25 +85,19 @@ def main():
             )
             return
 
-        max_pos = str(len(str(coll_counter.most_common(1)[0][1])))
         if opts.prefix:
-            str_format = (
-                "%" + max_pos + "i %" + max_pos + "i https://archive.org/details/%s"
-            )
+            str_format = "%6s %6s %s"
+            print(str_format % ("crawls", "urls", "collection"))
         else:
-            str_format = "%" + max_pos + "i https://archive.org/details/%s"
+            str_format = "%6s %s"
+            print(str_format % ("crawls", "collection"))
 
         for coll_id, count in coll_counter.most_common():
+            coll_url = f"https://archive.org/details/{coll_id}"
             if opts.prefix:
-                print(str_format % (count, len(coll_urls[coll_id]), coll_id))
+                print(str_format % (count, len(coll_urls[coll_id]), coll_url))
             else:
-                print(str_format % (count, coll_id))
-
-        print("")
-        print("total crawls %s-%s: %s" % (opts.start, opts.end, crawls))
-        if opts.prefix:
-            total_urls = len(reduce(operator.or_, coll_urls.values()))
-            print("total urls: %s" % total_urls)
+                print(str_format % (count, coll_url))
 
     elif opts.format == "json":
         data = list(crawl_data)
@@ -227,8 +226,8 @@ def get_json(url):
             reader = codecs.getreader("utf-8")
             return json.load(reader(resp))
         except Exception as e:
-            logging.error("caught exception: %s", e)
-        logging.info("sleeping for %s seconds", count * 10)
+            logging.debug("caught exception: %s", e)
+        logging.debug("sleeping for %s seconds", count * 10)
         time.sleep(count * 10)
     raise (Exception("unable to get JSON for %s", url))
 
